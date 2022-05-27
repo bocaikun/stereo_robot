@@ -1,0 +1,16 @@
+logs
+    original
+        data_id
+            train
+                index
+                    csv
+                    image
+                        left_view_image
+                        right_view_image
+            test
+                index
+                    csv
+                    image
+                        left_view_image
+                        right_view_image
+    norm
