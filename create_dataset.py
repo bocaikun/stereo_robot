@@ -90,7 +90,6 @@ def calculate_xy(theta, b, a, r=0.15):
     y = b - abs(math.cos(math.radians(theta)))*r
     x = a - math.sin(math.radians(theta))*r
 
-    print(theta,a, x, y)
     return x*1.333, y
 
 # task setting
@@ -134,8 +133,8 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
     stepPos_array = (endPos_array - startPos_array) / step
     stepOrn_array = (endOrn_array - startOrn_array) / step
 
-    # init
-    print("init env")
+    # Initializing
+    print("Initializing")
     for i in range(step):
         #print(i, "step")
         robotStepPos = list(startPos_array) # next position
@@ -146,9 +145,10 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
             targetPositions=targetPositionsJoints) # move plan
         # for i in range(10): #time
         p.stepSimulation()
-        time.sleep(1/240)
+        #time.sleep(1/240)
 
     # start data collection
+    print("Start collecting data")
     robot_rows = []
     for i in range(step+1):
         left_img_dir = train_left_image_path%(data_index,str(i).zfill(3))
@@ -173,6 +173,7 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
     f_csv = csv.writer(f)
     f_csv.writerows(robot_rows)
     p.resetSimulation()
+    print("Index:",data_index," Data collection done")
 
 if __name__ == "__main__":
     # pybullet env setting
@@ -181,7 +182,7 @@ if __name__ == "__main__":
     p.setAdditionalSearchPath(pybullet_data.getDataPath()) # load pybullet data path
     p.setGravity(0, 0, 0) # set gravity
 
-    for i in range(5):
+    for i in range(2):
         # load object and robot urdf
         planeID = p.loadURDF("plane.urdf")
         robotId = p.loadSDF("kuka_iiwa/model.sdf")
@@ -189,3 +190,5 @@ if __name__ == "__main__":
         boxId = p.loadURDF("objects/mug.urdf", globalScaling=1.2)
         #boxId = p.loadURDF("duck_vhacd.urdf", globalScaling=2)
         set_env(x=0.3,rz=0.785398,data_index=i)
+    p.disconnect()
+    print("All data collection done")
