@@ -33,8 +33,8 @@ def creat_train_dir(data_id, data_index):
         os.makedirs('data/original/%s/train/%s/csv'%(data_id,data_index))
     if not os.path.exists('data/original/%s/train/%s/image/left_images'%(data_id, data_index)):
         os.makedirs('data/original/%s/train/%s/image/left_images'%(data_id, data_index))
-    if not os.path.exists('data/original/%s/train/%s/image/right_images/right_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/train/%s/image/right_images/right_images'%(data_id, data_index))
+    if not os.path.exists('data/original/%s/train/%s/image/right_images'%(data_id, data_index)):
+        os.makedirs('data/original/%s/train/%s/image/right_images'%(data_id, data_index))
 
 def creat_test_dir(data_id, data_index):
     if not os.path.exists('data/original/%s/test'%data_id):
@@ -93,7 +93,7 @@ def image_output():
     return rgb_array1, rgb_array2
 
 def calculate_xy(theta, b, a, r=0.15):
-    theta = (theta / 3.1416) * 180 #()
+    theta = (theta / 3.141593) * 180 #()
     #y = b - abs(math.sin(math.radians(theta+270)))*r
     y = b - abs(math.cos(math.radians(theta)))*r
     x = a - math.sin(math.radians(theta))*r
@@ -122,7 +122,7 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):
     objX, objY = calculate_xy(boxStartOrn[2], boxStartPos[0], boxStartPos[1])
     # robotEndPos = [(boxStartPos[0]-robotStartPos[0])*ratio+robotStartPos[0], (boxStartPos[1]-robotStartPos[1])*ratio+robotStartPos[1], 0.625]
     robotEndPos = [objY, objX, 0.6500]
-    robotEndOrn = [1.5707965, 0.0000, boxStartOrn[2]+1.5707965]
+    robotEndOrn = [1.5707965, 3.141593, boxStartOrn[2]+1.5707965]
 
     startPos_array = np.array(robotStartPos)
     endPos_array = np.array(robotEndPos)
@@ -180,7 +180,7 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):
         left_img.save(left_img_dir)
         right_img.save(right_img_dir)
         p.stepSimulation()
-        time.sleep(1/120)
+        #time.sleep(1/120)
     if mode == 0:
         csvname = train_csv_path%(data_index)
     if mode == 1:
