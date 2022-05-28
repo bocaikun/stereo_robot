@@ -13,4 +13,9 @@ logs
                     image
                         left_view_image
                         right_view_image
-    norm
+
+dataset
+    csv: [150, 50, 6]
+    img: [150, 50, 3, 112, 112]
+    b_csv: [batchsize, 50, 6]
+    b_img: [batchsize, 50, 3, 112, 112]
