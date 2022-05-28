@@ -45,8 +45,8 @@ def creat_test_dir(data_id, data_index):
         os.makedirs('data/original/%s/test/%s/csv'%(data_id,data_index))
     if not os.path.exists('data/original/%s/test/%s/image/left_images'%(data_id, data_index)):
         os.makedirs('data/original/%s/test/%s/image/left_images'%(data_id, data_index))
-    if not os.path.exists('data/original/%s/test/%s/image/right_images/right_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/test/%s/image/right_images/right_images'%(data_id, data_index))
+    if not os.path.exists('data/original/%s/test/%s/image/right_images'%(data_id, data_index)):
+        os.makedirs('data/original/%s/test/%s/image/right_images'%(data_id, data_index))
 
 # camera setting
 def image_output():
