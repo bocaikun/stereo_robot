@@ -2,7 +2,6 @@ from re import S
 import pybullet as p
 import pybullet_data
 import numpy as np
-import random
 import math
 from PIL import Image
 import datetime, time, json, os, csv
@@ -38,7 +37,16 @@ def creat_train_dir(data_id, data_index):
         os.makedirs('data/original/%s/train/%s/image/right_images/right_images'%(data_id, data_index))
 
 def creat_test_dir(data_id, data_index):
-    pass
+    if not os.path.exists('data/original/%s/test'%data_id):
+        os.makedirs('data/original/%s/test'%data_id)
+    if not os.path.exists('data/original/%s/test/%s'%(data_id, data_index)):
+        os.makedirs('data/original/%s/test/%s'%(data_id,data_index))
+    if not os.path.exists('data/original/%s/test/%s/csv'%(data_id, data_index)):
+        os.makedirs('data/original/%s/test/%s/csv'%(data_id,data_index))
+    if not os.path.exists('data/original/%s/test/%s/image/left_images'%(data_id, data_index)):
+        os.makedirs('data/original/%s/test/%s/image/left_images'%(data_id, data_index))
+    if not os.path.exists('data/original/%s/test/%s/image/right_images/right_images'%(data_id, data_index)):
+        os.makedirs('data/original/%s/test/%s/image/right_images/right_images'%(data_id, data_index))
 
 # camera setting
 def image_output():
@@ -93,11 +101,7 @@ def calculate_xy(theta, b, a, r=0.15):
     return x*1.333, y
 
 # task setting
-def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
-    creat_train_dir(data_id, data_index)
-    creat_test_dir(data_id, data_index)
-
-    
+def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):    
     robotStartPos = [0.0000, 0.0000, 0.6500]
     robotStartOrn = p.getQuaternionFromEuler([0,0,0])
     p.resetBasePositionAndOrientation(robotId[0],robotStartPos,robotStartOrn)
@@ -135,6 +139,11 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
 
     # Initializing
     print("Initializing")
+    if mode == 0:
+        creat_train_dir(data_id, data_index)
+    if mode == 1:    
+        creat_test_dir(data_id, data_index)
+
     for i in range(step):
         #print(i, "step")
         robotStepPos = list(startPos_array) # next position
@@ -151,13 +160,17 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
     print("Start collecting data")
     robot_rows = []
     for i in range(step+1):
-        left_img_dir = train_left_image_path%(data_index,str(i).zfill(3))
-        right_img_dir = train_right_image_path%(data_index,str(i).zfill(3))
+        if mode == 0:
+            left_img_dir = train_left_image_path%(data_index,str(i).zfill(3))
+            right_img_dir = train_right_image_path%(data_index,str(i).zfill(3))
+        if mode == 1:
+            left_img_dir = test_left_image_path%(data_index,str(i).zfill(3))
+            right_img_dir = test_right_image_path%(data_index,str(i).zfill(3))
         #print(i, "step")
         robotStepPos = list(np.round((stepPos_array*i + startPos_array),8))
         robotStepOrn = list(np.round((stepOrn_array*i + startOrn_array),8))
         robot_rows.append(robotStepPos + robotStepOrn)
-        print("step:",i, "getL:", robot_rows[i])
+        #print("step:",i, "getL:", robot_rows[i])
         targetPositionsJoints = p.calculateInverseKinematics(robotId[0], 6, robotStepPos,\
             targetOrientation=p.getQuaternionFromEuler(robotStepOrn))# IK
         p.setJointMotorControlArray(robotId[0], range(7), p.POSITION_CONTROL,\
@@ -168,7 +181,10 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
         right_img.save(right_img_dir)
         p.stepSimulation()
         time.sleep(1/120)
-    csvname = train_csv_path%(data_index)
+    if mode == 0:
+        csvname = train_csv_path%(data_index)
+    if mode == 1:
+        csvname = test_csv_path%(data_index)
     f = open(csvname,'w', newline='',encoding='utf-8')
     f_csv = csv.writer(f)
     f_csv.writerows(robot_rows)
@@ -177,18 +193,39 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0):
 
 if __name__ == "__main__":
     # pybullet env setting
-    p.connect(p.GUI) # GUI Window
+    #p.connect(p.GUI) # GUI Window
+    p.connect(p.DIRECT)
     p.resetSimulation()
     p.setAdditionalSearchPath(pybullet_data.getDataPath()) # load pybullet data path
     p.setGravity(0, 0, 0) # set gravity
 
-    for i in range(2):
+    # dataset setting
+    traindataset_num = 3 * 50
+    testdataset_num = 2 * 10
+    total_num = traindataset_num + testdataset_num
+    train_x = [0.3, 0.0, -0.3]
+    test_x = [0.15, -0.15]
+
+    # data collection
+    for i in range(total_num):
         # load object and robot urdf
         planeID = p.loadURDF("plane.urdf")
         robotId = p.loadSDF("kuka_iiwa/model.sdf")
         tableId = p.loadURDF("table/table.urdf")
         boxId = p.loadURDF("objects/mug.urdf", globalScaling=1.2)
         #boxId = p.loadURDF("duck_vhacd.urdf", globalScaling=2)
-        set_env(x=0.3,rz=0.785398,data_index=i)
+
+        # switch mode
+        y = 0.9 + np.random.uniform(-1, 1) * 0.01
+        rz = np.random.uniform(-1, 1) * 0.785398 
+        if i < traindataset_num:
+            print("Train Data: ", i)
+            x = np.random.choice(train_x,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+            set_env(x,y,rz,data_index=i,mode=0)
+        else:
+            print("Test Data: ", i-traindataset_num)
+            x = np.random.choice(test_x,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+            set_env(x,y,rz,data_index=i-traindataset_num,mode=1)
+
     p.disconnect()
     print("All data collection done")
