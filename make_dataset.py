@@ -44,11 +44,17 @@ def main(data_id):
     creat_dir(data_id)
 
     train_csv_list = make_csv(train_csv_path_list)
+    print("train csv done")
     train_left_list = make_img(train_left_path_list)
+    print("train left done")
     train_right_list = make_img(train_right_path_list)
+    print("train right done")
     test_csv_list = make_csv(test_csv_path_list)
+    print("test csv done")
     test_left_list = make_img(test_left_path_list)
+    print("test left done")
     test_right_list = make_img(test_right_path_list)
+    print("test right done")
 
     print(np.array(test_csv_list).shape, np.array(test_left_list).shape)
 
