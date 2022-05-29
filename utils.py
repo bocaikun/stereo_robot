@@ -42,8 +42,65 @@ def img_pack(img_path, size=112, norm=True):
         img = cv2.merge((r,g,b))
         imgs_dataset.append(img)
     imgs_dataset = np.array(imgs_dataset)
-    imgs_dataset = np.transpose(imgs_dataset, [0,3,2,1]) 
+    imgs_dataset = np.transpose(imgs_dataset, [0,3,1,2]) 
     if norm == True:
         imgs_dataset = normalize(imgs_dataset, [0., 255.], [0., 1.])
     # print("img dataset shape:", imgs_dataset.shape)
     return imgs_dataset
+
+def draw_subplot(
+        x, # (time, motor_num)
+        y, # (time, motor_num)
+        n, 
+        yscale = None, 
+        linewidth = 1,
+        title = None, 
+        dashed = None, 
+        ylim = [None, None],
+        max_iter = None,
+        xlabel=None,
+        ylabel=None,
+        y_legend='',
+        y_dashed_legend = '',
+        color = None
+        ):
+    plt.subplot(n[0], n[1], n[2])
+    if max_iter is None:
+        if x is None:
+            plt.plot(y, linewidth=linewidth, label=y_legend, color=color)
+        else:
+            plt.plot(x, y, linewidth=linewidth, label=y_legend, color=color)
+    else:
+        if x is None:
+            for i in range(max_iter):
+                plt.plot(y[:,i], linewidth=linewidth, c=get_colorcode(i), label=y_legend+f'_{i}')
+        else:
+            for i in range(max_iter):
+                plt.plot(x, y[:, i], linewidth=linewidth, c=get_colorcode(i), label=y_legend+f'_{i}')
+    
+    if dashed is not None:
+        if max_iter is None:
+            if x is None:
+                plt.plot(dashed, linestyle='dashed', linewidth=linewidth, label=y_dashed_legend)
+            else:
+                plt.plot(x, dashed, linestyle='dashed', linewidth=linewidth, label=y_dashed_legend)
+        else:
+            if x is None:
+                for i in range(max_iter):
+                    plt.plot(dashed[:, i], linestyle='dashed', linewidth=linewidth, c=get_colorcode(i), label=y_dashed_legend+f'_{i}')
+            else:
+                for i in range(max_iter):
+                    plt.plot(x, dashed[:, i], linestyle='dashed', linewidth=linewidth, c=get_colorcode(i), label=y_dashed_legend+f'_{i}')
+
+    if title:
+        plt.title(title)
+    if yscale:
+        plt.yscale(yscale)
+    plt.ylim(ylim[0], ylim[1])
+    if xlabel:
+        plt.xlabel(xlabel)
+    if ylabel:
+        plt.ylabel(ylabel)
+    if y_legend and y_dashed_legend:
+        plt.legend()
+    plt.grid()

@@ -40,7 +40,7 @@ class encoder(nn.Module):
         super().__init__()
         self.coor = AddCoords()
         self.features = nn.Sequential(
-            nn.Conv2d(5, 8, kernel_size=5, stride=2, padding=1),
+            nn.Conv2d(3, 8, kernel_size=5, stride=2, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(8, 32, kernel_size=3, stride=2, padding=1),
             nn.ReLU(inplace=True),
@@ -52,8 +52,8 @@ class encoder(nn.Module):
         )
 
     def forward(self, left, right):
-        left = self.coor(left)
-        right = self.coor(right)
+        #left = self.coor(left)
+        #right = self.coor(right)
         left = self.features(left)
         right = self.features(right)
         fusion = torch.cat([left, right], dim=1)
@@ -72,7 +72,29 @@ class non_local(nn.Module):
         self.out_kqv = nn.Sequential(
             nn.Conv2d(dim, dim, kernel_size=1, stride=1, bias=False)
         )
-        
+
+    def get_positional_encodings(self, img):
+        batchsize, channel, height, width  = img.shape
+        x_linear = torch.linspace(0., 1., width).tile((height, 1))
+        y_linear = torch.linspace(0., 1., height).tile((width, 1)).T
+        positional_encodings = torch.cat(
+            [el.reshape(-1, 1) for el in [x_linear, y_linear]], axis=-1)
+        pt_value = positional_encodings.expand(batchsize, channel, *positional_encodings.shape) # shape(batch, c, h*w, 2)
+        return pt_value.to(img.device)
+
+    def get_att_map(self,img, temp=0.0001):
+        batchsize, channel, height, width  = img.shape
+        map = img.view(batchsize, channel, height*width)
+        softmax_out = F.softmax(map/temp, dim=-1)
+        att_map = softmax_out.unsqueeze(-2)
+        return att_map
+    
+    def get_pt(self, att_map, pt_value):
+        batchsize, channel, _, hw  = att_map.shape
+        pt = torch.matmul(att_map, pt_value) # shape(batch, c, 1, 2)
+        pt = pt.reshape(batchsize, channel*2)
+        return pt
+
     def forward(self, x):
         k = self.to_k(x)
         q = self.to_q(x)
@@ -88,7 +110,11 @@ class non_local(nn.Module):
         out = torch.einsum('bij,bkc->bic', attn, v)
         out = rearrange(out, 'b (h w) c -> b c h w', h=28, w=28)
         out = self.out_kqv(out)
-        return out
+        
+        pt_value = self.get_positional_encodings(out)
+        att_map = self.get_att_map(out,temp=0.0001)  # shape(bacth, c, 1, h*w)
+        pt = self.get_pt(att_map, pt_value)
+        return out, pt
 
 class to_fusion(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -107,10 +133,23 @@ class to_position(nn.Module):
     def __init__(self,output_dim):
         super().__init__()
         self.fnn = nn.Sequential(
-            nn.Linear(6, 24), nn.ReLU(),
-            nn.Linear(24, 24), nn.ReLU(),
+            nn.Linear(6, 12), nn.ReLU(),
+            nn.Linear(12, output_dim), nn.ReLU(),
         )
+    def forward(self, x):
+        x = self.fnn(x)
+        return x 
 
+class from_pt(nn.Module):
+    def __init__(self,output_dim):
+        super().__init__()
+        self.fnn = nn.Sequential(
+            nn.Linear(64, 16), nn.ReLU(),
+            nn.Linear(16, output_dim), nn.ReLU(),
+        )
+    def forward(self, x):
+        x = self.fnn(x)
+        return x 
 
 class to_decoder(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -129,8 +168,8 @@ class position(nn.Module):
     def __init__(self, input_dim):
         super().__init__()
         self.fnn = nn.Sequential(
-            nn.Linear(input_dim, 24), nn.ReLU(),
-            nn.Linear(24, 6)
+            nn.Linear(input_dim, 12), nn.ReLU(),
+            nn.Linear(12, 6)
         )
 
     def forward(self, x):
@@ -152,31 +191,34 @@ class decoder(nn.Module):
         return left, right
 
 class stereo_cae_att(nn.Module):
-    def __init__(self, img_fusion_dim=24,pos_fusion_dim=24):
+    def __init__(self, img_fusion_dim=24,pos_fusion_dim=12):
         super(stereo_cae_att, self).__init__()
         self.io_dim = 32*28*28
         self.encoder = encoder()
         self.att = non_local(dim=32)
         self.to_fusion = to_fusion(input_dim=self.io_dim, output_dim=img_fusion_dim)
         self.to_position = to_position(output_dim=pos_fusion_dim)
-        self.predrnn = nn.LSTMCell(24+24, 24+24)
-        self.position = position(input_dim=24)
+        self.from_pt = from_pt(output_dim=8)
+        self.predrnn = nn.LSTMCell(12+8+24, 12+24)
+        self.position = position(input_dim=pos_fusion_dim)
         self.to_decoder = to_decoder(input_dim=img_fusion_dim, output_dim=self.io_dim)
         self.decoder = decoder()
 
-    def forward(self, now_position, left, right, feat_hc):
+    def forward(self, left, right, now_position, feat_hc):
         img_fusion = self.encoder(left, right)
-        img_fusion = self.att(img_fusion)
+        img_fusion, pt = self.att(img_fusion)
         img_fusion = torch.flatten(img_fusion, start_dim=1)
         img_fusion = self.to_fusion(img_fusion)
-        pos_fusion = self.to_position(now_position)
+        
+        pt = self.from_pt(pt)
+        pos = self.to_position(now_position)
 
-        now_fusion = torch.cat([pos_fusion, img_fusion], dim=-1)
+        now_fusion = torch.cat([pos, pt, img_fusion], dim=-1)
         feat_hid, feat_state = self.predrnn(now_fusion, feat_hc)
         
-        position = self.to_position(feat_hid[:, :24])
-        T_fusion = self.to_decoder(feat_hid[:,24:])
+        position = self.position(feat_hid[:, :12])
+        T_fusion = self.to_decoder(feat_hid[:,12:])
         T_fusion = T_fusion.view(-1, 32, 28, 28)
         T_left, T_right = torch.split(T_fusion, [16, 16], dim=1)
         T_left, T_right = self.decoder(T_left, T_right)
-        return position, T_left, T_right, (feat_hid, feat_state)
+        return T_left, T_right, position, (feat_hid, feat_state)
