@@ -12,9 +12,9 @@ def normalize(data, in_range, out_range):
 
 def csv_pack(csv_path, mode=0):
     if mode == 0:
-        ypos_range = [0.645, 0.945] #0
+        ypos_range = [0.645, 1.05] #0
         xpos_range = [-0.45, 0.45] #1
-        zpos_range = [0.645, 0.665] #2
+        zpos_range = [0.645, 0.655] #2
         rx_range = [1.5707965*0.99, 1.5707965*1.01] #3
         ry_range = [3.141593*0.99, 3.141593*1.01] #4
         rz_range = [1.5707965*0.45, 1.5707965*1.55] #5

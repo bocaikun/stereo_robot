@@ -1,4 +1,3 @@
-from re import S
 import pybullet as p
 import pybullet_data
 import numpy as np
@@ -9,44 +8,44 @@ import datetime, time, json, os, csv
 # define logs path and creat logs dir
 data_id = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
 data_index = 0 # defualt
-train_left_image_path = 'data/original/%s/train/%s/image/left_images/%s.png'%(data_id,'%s','%s')
-train_right_image_path = 'data/original/%s/train/%s/image/right_images/%s.png'%(data_id,'%s', '%s')
-train_csv_path = 'data/original/%s/train/%s/csv/train_l.csv'%(data_id,'%s')
+train_left_image_path = 'D:/data/original/%s/train/%s/image/left_images/%s.png'%(data_id,'%s','%s')
+train_right_image_path = 'D:/data/original/%s/train/%s/image/right_images/%s.png'%(data_id,'%s', '%s')
+train_csv_path = 'D:/data/original/%s/train/%s/csv/train_l.csv'%(data_id,'%s')
 
-test_left_image_path = 'data/original/%s/test/%s/image/left_images/%s.png'%(data_id,'%s','%s')
-test_right_image_path = 'data/original/%s/test/%s/image/right_images/%s.png'%(data_id,'%s','%s')
-test_csv_path = 'data/original/%s/test/%s/csv/test_l.csv'%(data_id,'%s')
+test_left_image_path = 'D:/data/original/%s/test/%s/image/left_images/%s.png'%(data_id,'%s','%s')
+test_right_image_path = 'D:/data/original/%s/test/%s/image/right_images/%s.png'%(data_id,'%s','%s')
+test_csv_path = 'D:/data/original/%s/test/%s/csv/test_l.csv'%(data_id,'%s')
 
 
 def creat_train_dir(data_id, data_index):
-    if not os.path.exists('data'):
-        os.makedirs('data')
-    if not os.path.exists('data/original'):
-        os.makedirs('data/original/')
-    if not os.path.exists('data/original/%s'%data_id):
-        os.makedirs('data/original/%s'%data_id)
-    if not os.path.exists('data/original/%s/train'%data_id):
-        os.makedirs('data/original/%s/train'%data_id)
-    if not os.path.exists('data/original/%s/train/%s'%(data_id, data_index)):
-        os.makedirs('data/original/%s/train/%s'%(data_id,data_index))
-    if not os.path.exists('data/original/%s/train/%s/csv'%(data_id, data_index)):
-        os.makedirs('data/original/%s/train/%s/csv'%(data_id,data_index))
-    if not os.path.exists('data/original/%s/train/%s/image/left_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/train/%s/image/left_images'%(data_id, data_index))
-    if not os.path.exists('data/original/%s/train/%s/image/right_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/train/%s/image/right_images'%(data_id, data_index))
+    if not os.path.exists('D:/data'):
+        os.makedirs('D:/data')
+    if not os.path.exists('D:/data/original'):
+        os.makedirs('D:/data/original/')
+    if not os.path.exists('D:/data/original/%s'%data_id):
+        os.makedirs('D:/data/original/%s'%data_id)
+    if not os.path.exists('D:/data/original/%s/train'%data_id):
+        os.makedirs('D:/data/original/%s/train'%data_id)
+    if not os.path.exists('D:/data/original/%s/train/%s'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/train/%s'%(data_id,data_index))
+    if not os.path.exists('D:/data/original/%s/train/%s/csv'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/train/%s/csv'%(data_id,data_index))
+    if not os.path.exists('D:/data/original/%s/train/%s/image/left_images'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/train/%s/image/left_images'%(data_id, data_index))
+    if not os.path.exists('D:/data/original/%s/train/%s/image/right_images'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/train/%s/image/right_images'%(data_id, data_index))
 
 def creat_test_dir(data_id, data_index):
-    if not os.path.exists('data/original/%s/test'%data_id):
-        os.makedirs('data/original/%s/test'%data_id)
-    if not os.path.exists('data/original/%s/test/%s'%(data_id, data_index)):
-        os.makedirs('data/original/%s/test/%s'%(data_id,data_index))
-    if not os.path.exists('data/original/%s/test/%s/csv'%(data_id, data_index)):
-        os.makedirs('data/original/%s/test/%s/csv'%(data_id,data_index))
-    if not os.path.exists('data/original/%s/test/%s/image/left_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/test/%s/image/left_images'%(data_id, data_index))
-    if not os.path.exists('data/original/%s/test/%s/image/right_images'%(data_id, data_index)):
-        os.makedirs('data/original/%s/test/%s/image/right_images'%(data_id, data_index))
+    if not os.path.exists('D:/data/original/%s/test'%data_id):
+        os.makedirs('D:/data/original/%s/test'%data_id)
+    if not os.path.exists('D:/data/original/%s/test/%s'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/test/%s'%(data_id,data_index))
+    if not os.path.exists('D:/data/original/%s/test/%s/csv'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/test/%s/csv'%(data_id,data_index))
+    if not os.path.exists('D:/data/original/%s/test/%s/image/left_images'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/test/%s/image/left_images'%(data_id, data_index))
+    if not os.path.exists('D:/data/original/%s/test/%s/image/right_images'%(data_id, data_index)):
+        os.makedirs('D:/data/original/%s/test/%s/image/right_images'%(data_id, data_index))
 
 # camera setting
 def image_output():
@@ -98,7 +97,7 @@ def calculate_xy(theta, b, a, r=0.15):
     y = b - abs(math.cos(math.radians(theta)))*r
     x = a - math.sin(math.radians(theta))*r
 
-    return x*1.333, y
+    return x*1.3, y
 
 # task setting
 def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):    
@@ -106,11 +105,11 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):
     robotStartOrn = p.getQuaternionFromEuler([0,0,0])
     p.resetBasePositionAndOrientation(robotId[0],robotStartPos,robotStartOrn)
 
-    tableStartPos = [0.8000, 0., -0.0500]
+    tableStartPos = [0.8000, 0., -0.0600]
     tableStartOrn = p.getQuaternionFromEuler([0,0,0])
     p.resetBasePositionAndOrientation(tableId,tableStartPos,tableStartOrn)
 
-    boxStartPos = [y, x, 0.5800]
+    boxStartPos = [y, x, 0.6000]
     boxStartOrn = [0.0000, 0.0000, rz]
     p.resetBasePositionAndOrientation(boxId,boxStartPos,p.getQuaternionFromEuler(boxStartOrn))
 
@@ -121,7 +120,7 @@ def set_env(x=0., y=0.9, rz=0., step=50, data_index=0, mode=0):
     robotStartOrn = [1.5707965, 3.141593, 1.5707965]
     objX, objY = calculate_xy(boxStartOrn[2], boxStartPos[0], boxStartPos[1])
     # robotEndPos = [(boxStartPos[0]-robotStartPos[0])*ratio+robotStartPos[0], (boxStartPos[1]-robotStartPos[1])*ratio+robotStartPos[1], 0.625]
-    robotEndPos = [objY, objX, 0.6500]
+    robotEndPos = [objY-0.01, objX, 0.6500]
     robotEndOrn = [1.5707965, 3.141593, boxStartOrn[2]+1.5707965]
 
     startPos_array = np.array(robotStartPos)
@@ -200,11 +199,19 @@ if __name__ == "__main__":
     p.setGravity(0, 0, 0) # set gravity
 
     # dataset setting
-    traindataset_num = 3 * 50
-    testdataset_num = 2 * 10
+    traindataset_num = 4 * 20
+    testdataset_num = 4 * 5
     total_num = traindataset_num + testdataset_num
-    train_x = [0.3, 0.0, -0.3]
-    test_x = [0.15, -0.15]
+
+    train_x = [0.3, -0.3]
+    train_y = [0.8, 1.0]
+
+    test_x1 = [0.]
+    test_y1 = [0.9, 1.0]
+    test_x2 = [0.3, -0.3]
+    test_y2 = [0.9]
+
+    all_rz = [-0.78539, 0., 0.78539]
 
     # data collection
     for i in range(total_num):
@@ -215,17 +222,24 @@ if __name__ == "__main__":
         boxId = p.loadURDF("objects/mug.urdf", globalScaling=1.2)
         #boxId = p.loadURDF("duck_vhacd.urdf", globalScaling=2)
 
-        # switch mode
-        y = 0.9 + np.random.uniform(-1, 1) * 0.01
-        rz = np.random.uniform(-1, 1) * 0.785398 
         if i < traindataset_num:
             print("Train Data: ", i)
             x = np.random.choice(train_x,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+            y = np.random.choice(train_y,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+            rz = np.random.choice(all_rz,1).squeeze() + np.random.uniform(-1, 1) * 0.002
             set_env(x,y,rz,data_index=i,mode=0)
         else:
             print("Test Data: ", i-traindataset_num)
-            x = np.random.choice(test_x,1).squeeze() + np.random.uniform(-1, 1) * 0.01
-            set_env(x,y,rz,data_index=i-traindataset_num,mode=1)
+            if i % 2 == 0:
+                x = np.random.uniform(-1, 1) * 0.01
+                y = np.random.choice(test_y1,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+                rz = np.random.choice(all_rz,1).squeeze() + np.random.uniform(-1, 1) * 0.002
+                set_env(x,y,rz,data_index=i-traindataset_num,mode=1)
+            else:
+                x = np.random.choice(test_x2,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+                y = np.random.choice(test_y2,1).squeeze() + np.random.uniform(-1, 1) * 0.01
+                rz = np.random.choice(all_rz,1).squeeze() + np.random.uniform(-1, 1) * 0.002
+                set_env(x,y,rz,data_index=i-traindataset_num,mode=1)
 
     p.disconnect()
     print("All data collection done")

@@ -25,7 +25,7 @@ def make_csv(path_list, mode=0):
         csv_list.append(csv)
     return csv_list
 
-def make_img(path_list,size=80, norm=True):
+def make_img(path_list,size=112, norm=True):
     img_list = []
     for path in path_list:
         img = img_pack(path)
