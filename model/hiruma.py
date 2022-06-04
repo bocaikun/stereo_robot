@@ -32,13 +32,13 @@ class Hiruma(nn.Module):
         nn.init.kaiming_uniform_(self.query, a=np.sqrt(5), mode='fan_in')
 
     def __call__(self, in_img):
-        key, query, pt_value, feat_value = self.get_kqv(in_img)
+        img, key, query, pt_value, feat_value = self.get_kqv(in_img)
         pt_att_map = self.get_attention_map(key, query)
         pt_out, feat_out = self.get_att_out(pt_att_map, pt_value, feat_value)
 
         pt_out = pt_out.reshape(-1, self.q_num*2)
         feat_out = feat_out.reshape(-1, self.f_dim*self.q_num)
-        return pt_out, feat_out, pt_att_map
+        return img, pt_out, feat_out, pt_att_map
 
     def get_kqv(self, in_img):
         in_img = self.conv(in_img)
@@ -61,7 +61,7 @@ class Hiruma(nn.Module):
         # query: (batch_size, ch, key_h, key_w, q_num, q_dim)
         # pt_value: (batch_size, q_num, key_h*key_w, 2)
         # feat_value: (batch_size, q_num, key_h*key_w, f_dim)
-        return key, query, pt_value, feat_value
+        return in_img,key, query, pt_value, feat_value
 
     def get_attention_map(self, key, query):
         batch_size, key_h, key_w, _, _ = key.shape
@@ -75,7 +75,7 @@ class Hiruma(nn.Module):
         q_mul_k = q_mul_k.permute(0, 3, 1, 2)
         q_mul_k = q_mul_k.view(batch_size, self.q_num, key_h*key_w)
 
-        att_map = F.softmax(q_mul_k/1, dim=-1)
+        att_map = F.softmax(q_mul_k, dim=-1)
         att_map = att_map.unsqueeze(-2)
 
         # att_map: (batch_size, q_num, 1, key_h*key_w)

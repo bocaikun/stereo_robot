@@ -11,17 +11,16 @@ def normalize(data, in_range, out_range):
     return stretched
 
 def csv_pack(csv_path, mode=0):
+    ypos_range = [0.645, 1.05] #0
+    xpos_range = [-0.45, 0.45] #1
+    zpos_range = [0.645, 0.655] #2
+    rx_range = [1.5707965*0.99, 1.5707965*1.01] #3
+    ry_range = [3.141593*0.99, 3.141593*1.01] #4
+    rz_range = [1.5707965*0.45, 1.5707965*1.55] #5
+    
+    csv_pd = pd.read_csv(csv_path, index_col=None, header=None)
+    csv_np = csv_pd.to_numpy()
     if mode == 0:
-        ypos_range = [0.645, 1.05] #0
-        xpos_range = [-0.45, 0.45] #1
-        zpos_range = [0.645, 0.655] #2
-        rx_range = [1.5707965*0.99, 1.5707965*1.01] #3
-        ry_range = [3.141593*0.99, 3.141593*1.01] #4
-        rz_range = [1.5707965*0.45, 1.5707965*1.55] #5
-        
-        csv_pd = pd.read_csv(csv_path, index_col=None, header=None)
-        csv_np = csv_pd.to_numpy()
-
         csv_np[:, 0] = normalize(csv_np[:, 0], ypos_range, [0., 1.])
         csv_np[:, 1] = normalize(csv_np[:, 1], xpos_range, [0., 1.])
         csv_np[:, 2] = normalize(csv_np[:, 2], zpos_range, [0., 1.])
@@ -29,6 +28,40 @@ def csv_pack(csv_path, mode=0):
         csv_np[:, 4] = normalize(csv_np[:, 4], ry_range, [0., 1.])
         csv_np[:, 5] = normalize(csv_np[:, 5], rz_range, [0., 1.])
         # print("csv dataset shape", csv_np.shape)
+    if mode == 1:
+        csv_np[:, 0] = normalize(csv_np[:, 0], [0., 1.], ypos_range)
+        csv_np[:, 1] = normalize(csv_np[:, 1], [0., 1.], xpos_range)
+        csv_np[:, 2] = normalize(csv_np[:, 2], [0., 1.], zpos_range)
+        csv_np[:, 3] = normalize(csv_np[:, 3], [0., 1.], rx_range)
+        csv_np[:, 4] = normalize(csv_np[:, 4], [0., 1.], ry_range)
+        csv_np[:, 5] = normalize(csv_np[:, 5], [0., 1.], rz_range)
+
+    return csv_np
+
+def csv_norm(csv_np, mode=0):
+    ypos_range = [0.645, 1.05] #0
+    xpos_range = [-0.45, 0.45] #1
+    zpos_range = [0.645, 0.655] #2
+    rx_range = [1.5707965*0.99, 1.5707965*1.01] #3
+    ry_range = [3.141593*0.99, 3.141593*1.01] #4
+    rz_range = [1.5707965*0.45, 1.5707965*1.55] #5
+  
+    if mode == 0:
+        csv_np[:, 0] = normalize(csv_np[:, 0], ypos_range, [0., 1.])
+        csv_np[:, 1] = normalize(csv_np[:, 1], xpos_range, [0., 1.])
+        csv_np[:, 2] = normalize(csv_np[:, 2], zpos_range, [0., 1.])
+        csv_np[:, 3] = normalize(csv_np[:, 3], rx_range, [0., 1.])
+        csv_np[:, 4] = normalize(csv_np[:, 4], ry_range, [0., 1.])
+        csv_np[:, 5] = normalize(csv_np[:, 5], rz_range, [0., 1.])
+        # print("csv dataset shape", csv_np.shape)
+    if mode == 1:
+        csv_np[:, 0] = normalize(csv_np[:, 0], [0., 1.], ypos_range)
+        csv_np[:, 1] = normalize(csv_np[:, 1], [0., 1.], xpos_range)
+        csv_np[:, 2] = normalize(csv_np[:, 2], [0., 1.], zpos_range)
+        csv_np[:, 3] = normalize(csv_np[:, 3], [0., 1.], rx_range)
+        csv_np[:, 4] = normalize(csv_np[:, 4], [0., 1.], ry_range)
+        csv_np[:, 5] = normalize(csv_np[:, 5], [0., 1.], rz_range)
+
     return csv_np
 
 def img_pack(img_path, size=112, norm=True):
@@ -47,6 +80,13 @@ def img_pack(img_path, size=112, norm=True):
         imgs_dataset = normalize(imgs_dataset, [0., 255.], [0., 1.])
     # print("img dataset shape:", imgs_dataset.shape)
     return imgs_dataset
+
+
+def img_norm(img, norm=True):
+    if norm == True:
+        img = normalize(img, [0., 255.], [0., 1.])
+    # print("img dataset shape:", imgs_dataset.shape)
+    return img
 
 def draw_subplot(
         x, # (time, motor_num)

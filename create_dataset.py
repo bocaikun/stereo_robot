@@ -61,12 +61,12 @@ def image_output():
                                             nearVal=0.1,
                                             farVal=100.0)
     # left camera image ouput
-    (_,_,px1,_,_)=p.getCameraImage(width=200,height=200,
+    (_,_,px1,_,_)=p.getCameraImage(width=112,height=112,
                                 viewMatrix=view_matrix1,
                                 projectionMatrix=proj_matrix1,
                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
     rgb_array1=np.array(px1,dtype=np.uint8)
-    rgb_array1=np.reshape(rgb_array1,(200,200,4))
+    rgb_array1=np.reshape(rgb_array1,(112,112,4))
     rgb_array1=rgb_array1[:,:,:3]
     rgb_array1 = Image.fromarray(rgb_array1)
     # right camera position
@@ -80,13 +80,13 @@ def image_output():
                                             nearVal=0.1,
                                             farVal=100.0)
     # right camera image output
-    (_,_,px2,_,_)=p.getCameraImage(width=200,height=200,
+    (_,_,px2,_,_)=p.getCameraImage(width=112,height=112,
                                 viewMatrix=view_matrix2,
                                 projectionMatrix=proj_matrix2,
                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
                                 
     rgb_array2=np.array(px2,dtype=np.uint8)
-    rgb_array2=np.reshape(rgb_array2,(200,200,4))
+    rgb_array2=np.reshape(rgb_array2,(112,112,4))
     rgb_array2=rgb_array2[:,:,:3]
     rgb_array2 = Image.fromarray(rgb_array2)
     return rgb_array1, rgb_array2
