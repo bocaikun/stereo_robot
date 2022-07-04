@@ -45,7 +45,7 @@ def main(
     train_dataset = dataset(train_left, train_right, train_csv)
     train_dataloader = DataLoader(train_dataset, batch_size=batchsize, shuffle=True, drop_last=True)
     test_dataset = dataset(test_left, test_right, test_csv)
-    test_dataloader = DataLoader(test_dataset, batch_size=test_csv.shape[0])
+    test_dataloader = DataLoader(test_dataset, batch_size=batchsize)
     print("Load Data done")
 
     # define training logs
@@ -64,8 +64,8 @@ def main(
     print("use device:", device)
     model = stereo_hiruma_att(device)
     model = model.to(device)
-    #criterion = torch.nn.MSELoss()
-    criterion = torch.nn.SmoothL1Loss()
+    criterion = torch.nn.MSELoss()
+    #criterion = torch.nn.SmoothL1Loss()
     optimizer = torch.optim.AdamW(model.parameters())
     #optimizer=torch.optim.Adam(model.parameters())
     loss_coef = [1.0, 0.1, 0.001, 0.0001]
@@ -89,28 +89,18 @@ def main(
     loss_decay = 0.0001
     ratio = 1.0
     for e in range(epoch):
-        if e >100:
+        if e > 100:
+            ratio = 1.0
             loss_decay = 0.01
+        if e > 200:
             ratio = 0.9
-        if e > 250:
-            loss_decay = 0.1
-            ratio = 0.8
-        if e > 350:
-            ratio = 0.7
-        if e > 450:
-            ratio = 0.6
-        if e > 550:
+            loss_decay = 0.01
+        if e > 300:
             ratio = 0.5
-        if e > 650:
-            ratio = 0.4
-        if e > 750:
-            ratio = 0.3
-        if e > 850:
-            ratio = 0.2
-        if e > 950:
-            ratio = 0.1
-        if e > 1050:
-            ratio = 0
+            loss_decay = 0.1
+        if e > 1000:
+            ratio = 0.
+
         start_time = datetime.datetime.now()
         for train_left, train_right, train_position in train_dataloader:
             model.train()
@@ -130,7 +120,7 @@ def main(
                 t_train_right = train_right[:,steps]
 
                 t_pred_left, t_pred_right, t_train_position, att_map1, att_map2, t_pt,pt, train_rnn_hidden = model(t_train_left, t_train_right, t_train_position, train_rnn_hidden)
-                train_pt_loss += loss_decay*torch.mean( torch.square( t_pt - pt ) ) 
+                train_pt_loss += loss_decay*torch.mean(torch.square(t_pt - pt)) 
                 train_position_loss += criterion(train_position[:,steps+1], t_train_position)
                 train_left_loss += criterion(train_left[:,steps+1], t_pred_left)
                 train_right_loss += criterion(train_right[:,steps+1], t_pred_right)

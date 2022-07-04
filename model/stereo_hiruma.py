@@ -3,7 +3,7 @@ from torch import nn, softmax
 import numpy as np
 import torch.nn.functional as F
 from einops import rearrange
-from model.hiruma import Hiruma
+from model.hiruma_cai import Hiruma
 
 
 class position(nn.Module):
@@ -58,9 +58,9 @@ class decoder(nn.Module):
     def __init__(self):
         super().__init__()
         self.to_img = nn.Sequential(
-            nn.ConvTranspose2d(40, 30, kernel_size=3, stride=1),nn.ReLU(),
-            nn.ConvTranspose2d(30, 30, kernel_size=3, stride=2, output_padding=1), nn.ReLU(),
-            nn.ConvTranspose2d(30, 3, kernel_size=5, stride=2, output_padding=1) 
+            nn.ConvTranspose2d(40, 32, kernel_size=3, stride=1),nn.ReLU(),
+            nn.ConvTranspose2d(32, 16, kernel_size=3, stride=1), nn.ReLU(),
+            nn.ConvTranspose2d(16, 3, kernel_size=3, stride=1) 
         )
     
     def forward(self, img):
@@ -70,16 +70,16 @@ class decoder(nn.Module):
 class stereo_hiruma_att(nn.Module):
     def __init__(self, device):
         super(stereo_hiruma_att, self).__init__()
-        imgsize = 40*24*24
+        imgsize = 40*58*58
         self.att = Hiruma(device)
         self.pt_embedding = pt_embedding()
         self.feat_embedding = feat_embedding()
-        self.query_embedding = query_embedding()
+        #self.query_embedding = query_embedding()
         self.predrnn = nn.LSTMCell(80+6+16, 6+16)
-        self.to_decoder = to_decoder(input_dim=40, output_dim=imgsize)
+        #self.to_decoder = to_decoder(input_dim=40, output_dim=imgsize)
         self.decoder = decoder()
         self.position = position(input_dim=6)
-        sub_im_size = 24
+        sub_im_size = 58
         
         grid = np.meshgrid( np.linspace(0., 1., num=sub_im_size, dtype=np.float32),
                             np.linspace(0., 1., num=sub_im_size, dtype=np.float32),
@@ -98,14 +98,13 @@ class stereo_hiruma_att(nn.Module):
         _xxx, _yyy = torch.split(ij, 4, dim=-1)
         _xxx = _xxx.repeat(1,10)
         _yyy = _yyy.repeat(1,10)
-
         #_xxx= ij[:,:self.k_dim]
         #_yyy= ij[:,self.k_dim:]
 
-        __ij= torch.concat([torch.unsqueeze(_xxx, -1), torch.unsqueeze(_yyy, -1)], axis=-1)
+        __ij = torch.concat([torch.unsqueeze(_xxx, -1), torch.unsqueeze(_yyy, -1)], axis=-1)
 
-        ij = __ij.reshape( [-1, 40, 2, 1, 1] )
-        squared_distances = torch.sum( torch.pow(ij - self.grid_stacked, 2.0), axis=2 )
+        ij = __ij.reshape([-1, 40, 2, 1, 1])
+        squared_distances = torch.sum(torch.pow(ij - self.grid_stacked, 2.0), axis=2)
         heatmap = scale * torch.exp(-squared_distances / 0.1)
 
         return heatmap
@@ -116,7 +115,7 @@ class stereo_hiruma_att(nn.Module):
         img2, pt_out2, feat_out2, att_map2 = self.att(right)
 
         pt_fusion = torch.cat([pt_out1, pt_out2], dim=-1)
-        #pt_fusion = self.pt_embedding(pt_fusion)
+        pt_fusion = self.pt_embedding(pt_fusion)
         feat_fusion = torch.cat([feat_out1, feat_out2], dim=-1)
         feat_fusion = self.feat_embedding(feat_fusion)
 
@@ -138,6 +137,7 @@ class stereo_hiruma_att(nn.Module):
         
         #n_left_feat = self.to_decoder(n_left_feat)
         #n_left_feat = n_left_feat.view(-1, 40, 24, 24)
+        #print(heat_left.shape, img1.shape)
         n_left_feat = torch.mul(heat_left, img1)
         n_left_feat = self.decoder(n_left_feat)
         #n_right_feat = self.to_decoder(n_right_feat)

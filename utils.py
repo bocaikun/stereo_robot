@@ -64,7 +64,7 @@ def csv_norm(csv_np, mode=0):
 
     return csv_np
 
-def img_pack(img_path, size=112, norm=True):
+def img_pack(img_path, size=64, norm=True):
     imgs_list = list(os.listdir(img_path))
     #imgs_num = len(imgs_list)
     imgs_dataset = []

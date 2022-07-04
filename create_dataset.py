@@ -50,48 +50,48 @@ def creat_test_dir(data_id, data_index):
 # camera setting
 def image_output():
     # left camera position
-    view_matrix1=p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0.5,-0.05,1.5],
-                                                    distance=.1,
-                                                    yaw=-90,
+    view_matrix1=p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[1.2,-0.05,1.2],
+                                                    distance=.025,
+                                                    yaw=90,
                                                     pitch=-60,
                                                     roll=0,upAxisIndex=2)
     # left camera parameter 
-    proj_matrix1=p.computeProjectionMatrixFOV(fov=69,
+    proj_matrix1=p.computeProjectionMatrixFOV(fov=75,
                                             aspect=1.0,
                                             nearVal=0.1,
                                             farVal=100.0)
     # left camera image ouput
-    (_,_,px1,_,_)=p.getCameraImage(width=112,height=112,
+    (_,_,px1,_,_)=p.getCameraImage(width=64,height=64,
                                 viewMatrix=view_matrix1,
                                 projectionMatrix=proj_matrix1,
                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
     rgb_array1=np.array(px1,dtype=np.uint8)
-    rgb_array1=np.reshape(rgb_array1,(112,112,4))
+    rgb_array1=np.reshape(rgb_array1,(64,64,4))
     rgb_array1=rgb_array1[:,:,:3]
     rgb_array1 = Image.fromarray(rgb_array1)
     # right camera position
-    view_matrix2=p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[0.5,0.05,1.5],
-                                                    distance=.1,
-                                                    yaw=-90,
+    view_matrix2=p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=[1.2,0.05,1.2],
+                                                    distance=.025,
+                                                    yaw=90,
                                                     pitch=-60,
                                                     roll=0,upAxisIndex=2)
     # right camera parameter
-    proj_matrix2=p.computeProjectionMatrixFOV(fov=69,aspect=1.0,
+    proj_matrix2=p.computeProjectionMatrixFOV(fov=75,aspect=1.0,
                                             nearVal=0.1,
                                             farVal=100.0)
     # right camera image output
-    (_,_,px2,_,_)=p.getCameraImage(width=112,height=112,
+    (_,_,px2,_,_)=p.getCameraImage(width=64,height=64,
                                 viewMatrix=view_matrix2,
                                 projectionMatrix=proj_matrix2,
                                 renderer=p.ER_BULLET_HARDWARE_OPENGL)
                                 
     rgb_array2=np.array(px2,dtype=np.uint8)
-    rgb_array2=np.reshape(rgb_array2,(112,112,4))
+    rgb_array2=np.reshape(rgb_array2,(64,64,4))
     rgb_array2=rgb_array2[:,:,:3]
     rgb_array2 = Image.fromarray(rgb_array2)
     return rgb_array1, rgb_array2
 
-def calculate_xy(theta, b, a, r=0.15):
+def calculate_xy(theta, b, a, r=0.18):
     theta = (theta / 3.141593) * 180 #()
     #y = b - abs(math.sin(math.radians(theta+270)))*r
     y = b - abs(math.cos(math.radians(theta)))*r
@@ -199,19 +199,18 @@ if __name__ == "__main__":
     p.setGravity(0, 0, 0) # set gravity
 
     # dataset setting
-    traindataset_num = 4 * 20
-    testdataset_num = 4 * 5
+    traindataset_num = 1# 4 * 20
+    testdataset_num = 1 #8 * 5
     total_num = traindataset_num + testdataset_num
 
-    train_x = [0.3, -0.3]
+    train_x = [0.32, -0.32]
     train_y = [0.8, 1.0]
-
-    test_x1 = [0.]
-    test_y1 = [0.9, 1.0]
-    test_x2 = [0.3, -0.3]
+    test_x1 = [0., 0.16, -0.16]
+    test_y1 = [1.0]
+    test_x2 = [0.32, -0.32, 0., 0.16, -0.16]
     test_y2 = [0.9]
 
-    all_rz = [-0.78539, 0., 0.78539]
+    all_rz = [-0.78539, -0.39270, 0., 0.39270, 0.78539]
 
     # data collection
     for i in range(total_num):
@@ -219,7 +218,7 @@ if __name__ == "__main__":
         planeID = p.loadURDF("plane.urdf")
         robotId = p.loadSDF("kuka_iiwa/model.sdf")
         tableId = p.loadURDF("table/table.urdf")
-        boxId = p.loadURDF("objects/mug.urdf", globalScaling=1.2)
+        boxId = p.loadURDF("objects/mug.urdf", globalScaling=1.3)
         #boxId = p.loadURDF("duck_vhacd.urdf", globalScaling=2)
 
         if i < traindataset_num:
@@ -231,7 +230,7 @@ if __name__ == "__main__":
         else:
             print("Test Data: ", i-traindataset_num)
             if i % 2 == 0:
-                x = np.random.uniform(-1, 1) * 0.01
+                x = np.random.choice(test_x1,1).squeeze() + np.random.uniform(-1, 1) * 0.01
                 y = np.random.choice(test_y1,1).squeeze() + np.random.uniform(-1, 1) * 0.01
                 rz = np.random.choice(all_rz,1).squeeze() + np.random.uniform(-1, 1) * 0.002
                 set_env(x,y,rz,data_index=i-traindataset_num,mode=1)
