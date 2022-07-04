@@ -85,14 +85,32 @@ def main(
     with open('D:/logs/stereo/{}/progress.csv'.format(training_id), 'w') as file:
         header = 'epoch,time,train/pos,train/rec_img,train/pt,test/pos,test_img,test_pt\n'
         file.write(header)
-    #Start Learining
+    #Start Learining\
+    loss_decay = 0.0001
+    ratio = 1.0
     for e in range(epoch):
-        if e < 100:
-            loss_decay = 0.0001
-        if e <=250:
+        if e >100:
             loss_decay = 0.01
-        if e>=250:
+            ratio = 0.9
+        if e > 250:
             loss_decay = 0.1
+            ratio = 0.8
+        if e > 350:
+            ratio = 0.7
+        if e > 450:
+            ratio = 0.6
+        if e > 550:
+            ratio = 0.5
+        if e > 650:
+            ratio = 0.4
+        if e > 750:
+            ratio = 0.3
+        if e > 850:
+            ratio = 0.2
+        if e > 950:
+            ratio = 0.1
+        if e > 1050:
+            ratio = 0
         start_time = datetime.datetime.now()
         for train_left, train_right, train_position in train_dataloader:
             model.train()
@@ -104,9 +122,10 @@ def main(
             for steps in range(49+3):
                 if steps < 3:
                     steps = 0
+                    t_train_position = train_position[:,steps]
                 else:
                     steps = steps-3
-                t_train_position = train_position[:,steps]
+                    t_train_position = train_position[:,steps] * ratio + t_train_position * (1 - ratio)
                 t_train_left = train_left[:,steps]
                 t_train_right = train_right[:,steps]
 
@@ -144,9 +163,10 @@ def main(
                         for steps in range(49+3):
                             if steps < 3:
                                 steps = 0
+                                t_test_position = test_position[:,steps,:]
                             else:
                                 steps = steps-3
-                            t_test_position = test_position[:,steps,:]
+                                t_test_position = test_position[:,steps,:] * ratio + t_test_position * (1 - ratio)
                             t_test_left = test_left[:,steps,:]
                             t_test_right = test_right[:,steps,:]
 
